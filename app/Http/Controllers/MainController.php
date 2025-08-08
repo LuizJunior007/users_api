@@ -71,7 +71,7 @@ class MainController extends Controller
         return response()->json([
             'msg' => 'success',
             'users' => $users
-        ]);
+        ], 200);
     }
 
     public function getUser($id){
@@ -83,14 +83,14 @@ class MainController extends Controller
             return response()->json([
                 'status' => 'error',
                 'msg' => 'Nenhum usuário foi encontrado'
-            ]);
+            ], 204);
 
         }
 
         return response()->json([
             'status' => 'success',
             'user' => $user 
-        ]);
+        ], 200);
     }
 
     public function updateUser(Request $request, $id){
@@ -102,7 +102,7 @@ class MainController extends Controller
             return response()->json([
                 'status' => 'error',
                 'msg' => 'Nenhum usuário foi encontrado'
-            ]);
+            ], 204);
         }
 
         try{
@@ -127,21 +127,21 @@ class MainController extends Controller
                 'lastname' => $data['lastname'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password'])
-            ]);
+            ], 200);
 
             if($user){
 
                 return response()->json([
                     'status' => 'success',
                     'msg' => 'Atualizado com sucesso'
-                ], 201);
+                ], 200);
 
             } else{
 
                 return response()->json([
                     'status' => 'error',
                     'msg' => 'Erro ao tentar atualizar usuário'
-                ]);
+                ], 404);
             }
 
         } catch(ValidationException $e){
@@ -165,7 +165,7 @@ class MainController extends Controller
             return response()->json([
                 'status' => 'error',
                 'msg' => 'Nenhum usuário foi encontrado'
-            ]);
+            ], 204);
         }
 
         if($user->delete()){
@@ -173,14 +173,14 @@ class MainController extends Controller
             return response()->json([
                 'status' => 'success',
                 'msg' => 'Usuário removido com sucesso'
-            ]);
+            ], 200);
 
         } else{
 
             return response()->json([
                 'status' => 'error',
                 'msg' => 'Erro ao tentar remover usuário'
-            ]);
+            ], 404);
         }
 
     }
