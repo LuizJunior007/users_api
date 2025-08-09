@@ -11,7 +11,8 @@ use Illuminate\Validation\ValidationException;
 class MainController extends Controller
 {
     
-    public function addUser(Request $request){
+    // Criar usuário
+    public function store(Request $request){
 
         try{
 
@@ -49,7 +50,7 @@ class MainController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'msg' => 'Erro ao tentar cadastrar usuário'
-                ]);
+                ], 404);
             }
 
         } catch(ValidationException $e){
@@ -64,7 +65,8 @@ class MainController extends Controller
 
     }
 
-    public function getUsers(){
+    // Listar todos
+    public function index(){
 
         $users = User::all();
 
@@ -74,7 +76,8 @@ class MainController extends Controller
         ], 200);
     }
 
-    public function getUser($id){
+    // Listar um por id
+    public function show($id){
 
         $user = User::find((int) $id);
 
@@ -83,7 +86,7 @@ class MainController extends Controller
             return response()->json([
                 'status' => 'error',
                 'msg' => 'Nenhum usuário foi encontrado'
-            ], 204);
+            ], 404);
 
         }
 
@@ -93,7 +96,8 @@ class MainController extends Controller
         ], 200);
     }
 
-    public function updateUser(Request $request, $id){
+    // Atualizar usuário
+    public function update(Request $request, $id){
 
         $user = User::find($id);
 
@@ -102,32 +106,52 @@ class MainController extends Controller
             return response()->json([
                 'status' => 'error',
                 'msg' => 'Nenhum usuário foi encontrado'
-            ], 204);
+            ], 404);
         }
 
         try{
 
-            $data = $request->validate([
-                'name' => 'sometimes|string',
-                'lastname' => 'sometimes|string',
-                'email' => [
-                    'sometimes',
-                    'email',
-                    Rule::unique('users')->ignore($id)
-                ],
-                'password' => 'sometimes|min:6',
-            ], [
-                'email.email' => 'Formato de email inválido',
-                'email.unique' => 'Email já está em uso',
-                'password.min' => 'Senha deve conter no mínimo 6 caracters' 
+            $data = $request->validate(
+                
+                $request->isMethod('patch')
+                    ?
+                [
+                    'name' => 'sometimes|string',
+                    'lastname' => 'sometimes|string',
+                    'email' => [
+                        'sometimes',
+                        'email',
+                        Rule::unique('users')->ignore($id)
+                    ],
+                    'password' => 'sometimes|min:6',
+                ]
+                    :
+                [
+                    'name' => 'required|string',
+                    'lastname' => 'required|string',
+                    'email' => [
+                        'required',
+                        'email',
+                        Rule::unique('users')->ignore($id)
+                    ],
+                    'password' => 'min:6'
+                ]
+                , 
+                [   
+                    'email.required' => 'Preencha o campo email',
+                    'email.email' => 'Formato de email inválido',
+                    'email.unique' => 'Email já está em uso',
+                    'name.required' => 'Preencha o campo nome',
+                    'lastname.required' => 'Preencha o campo sobrenome',
+                    'password.min' => 'Senha deve conter no mínimo 6 caracters',
             ]);
 
             $user->update([
-                'name' => $data['name'],
-                'lastname' => $data['lastname'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password'])
-            ], 200);
+                'name' => $data['name'] ?? $user->name,
+                'lastname' => $data['lastname'] ?? $user->lastname,
+                'email' => $data['email'] ?? $user->email,
+                'password' => isset($data['password']) ? Hash::make($data['password']) : $user->password
+            ]);
 
             if($user){
 
@@ -156,7 +180,8 @@ class MainController extends Controller
         
     }
 
-    public function deleteUser($id){
+    // Excluir usuário
+    public function destroy($id){
 
         $user = User::find($id);
 
@@ -165,7 +190,7 @@ class MainController extends Controller
             return response()->json([
                 'status' => 'error',
                 'msg' => 'Nenhum usuário foi encontrado'
-            ], 204);
+            ], 404);
         }
 
         if($user->delete()){
